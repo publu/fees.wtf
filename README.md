@@ -1,8 +1,7 @@
 # fees.wtf
 
-Calculate fees for multichain network.
+Calculate fees for multichain contracts.
 
-<a href="https://fees.sigri44.com" target="_blank">fees.sigri44.com</a>
 
 ## Supported chains
 - Ethereum
@@ -10,6 +9,3 @@ Calculate fees for multichain network.
 - Binance Smart Chain
 - xDai
 - Fantom
-
-## Coming Soon
-- Avalanche (waiting for API access)
