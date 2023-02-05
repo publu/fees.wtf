@@ -28,18 +28,18 @@ function comma(x) {
     return parts.join(".");
 }
 
-async function getTxs(address) {
+async function getTxs(address, chainId) {
     const chainConfig = []
 
     chainConfig['0x1'] = {id: '0x1', shortname: 'eth', name:'Ethereum', symbol: 'eth', coingecko_name: 'ethereum', token: 'Ξ', color: '#03a9f4', explorer_uri: 'https://api.etherscan.io', key: 'KKEHS5KMBY8KJSTBKUXRT9X33NZUNDPSHD'}
     chainConfig['0x38'] = {id: '0x38', shortname: 'bsc', name:'Binance Smart Chain', symbol: 'bnb', coingecko_name: 'binancecoin', token: 'Ḇ', color: "#f4ce03", explorer_uri: 'https://api.bscscan.com', key: 'UWB7YUCVQXT7TGFK41TNJSJBIHDQ1JGU9D'}
     chainConfig['0x64'] = {id: '0x64', shortname: 'xdai', name:'xDai', symbol: 'xdai', coingecko_name: 'xdai', token: 'Ẍ', color: '#48a9a6', explorer_uri: 'https://blockscout.com/xdai/mainnet', key: ''}
-    chainConfig['0x89'] = {id: '0x89', shortname: 'matic', name:'Polygon', symbol: 'matic', coingecko_name: 'matic-network', token: 'M̃', color: '#9d03f4', explorer_uri: 'https://api.polygonscan.com', key: 'QDPWKASEUSSYTKX9ZVMSSQGX4PTCZGHNC8'}
+    chainConfig['0x89'] = {id: '0x89', shortname: 'matic', name:'Polygon', symbol: 'matic', coingecko_name: 'polygon', token: 'M̃', color: '#9d03f4', explorer_uri: 'https://api.polygonscan.com', key: 'QDPWKASEUSSYTKX9ZVMSSQGX4PTCZGHNC8'}
     chainConfig['0xfa'] = {id: '0xfa', shortname: 'ftm', name:'Fantom', symbol: 'ftm', coingecko_name: 'fantom', token: 'ƒ', color: '#00dbff', explorer_uri: 'https://api.ftmscan.com', key: 'B5UU3GDR3VJYVXFYT6RPK5RA6I8J5CV6B3'}
         // {id: '0xa86a', shortname: 'avax', name:'Avalanche', symbol: 'avax', coingecko_name: 'avalanche-2', token: 'Ã', color: '#ec1616', explorer_uri: 'https://cchain.explorer.avax.network/', key: ''},
 
     // Detect chainId
-    const chainId = await ethereum.request({ method: 'eth_chainId' });
+    //const chainId = await ethereum.request({ method: 'eth_chainId' });
     if (!chainId in chainConfig) {
         let authorizedNetworks = "";
         for (const [key, network] of Object.entries(chainConfig)) {
@@ -53,13 +53,13 @@ async function getTxs(address) {
     }
 
     let coingeckoSymbol = chainConfig[chainId].coingecko_name
-    let tokenusd = await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+coingeckoSymbol+'&vs_currencies=usd')
+    let tokenusd = 1.20/*await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+coingeckoSymbol+'&vs_currencies=usd')
         .then(response => {return response.json()})
         .catch(err => {
             console.log('(â•¯Â°â–¡Â°)â•¯ï¸µ â”»â”â”»', err);
         })
-
-        tokenusd = tokenusd[coingeckoSymbol].usd;
+    */
+        //tokenusd = tokenusd[coingeckoSymbol].usd;
     console.log(chainConfig[chainId].symbol.toUpperCase()+'USD: $' + tokenusd);
     
     let key = chainConfig[chainId].key
@@ -94,9 +94,9 @@ async function getTxs(address) {
         txs.push.apply(txs, txs2)
     }
 
-    let txsOut = $.grep(txs, function(v) {
-        return v.from === address.toLowerCase();
-    });
+    let txsOut = txs;//$.grep(txs, function(v) {
+        //return v.from === address.toLowerCase();
+    //});
 
     txsOut = txsOut.map(({ confirmations, ...item }) => item);
     txsOut = new Set(txsOut.map(JSON.stringify));
@@ -171,40 +171,7 @@ async function getTxs(address) {
 
 }
 
-function main(address) {
-    console.log('Getting transactions for ' + address)
-    getTxs(address);
+function main(address, chainId) {
+    console.log('Getting transactions for ' + address + ' chainId ', chainId)
+    getTxs(address, chainId);
 }
-
-async function tip(amount) {
-    if(window.hasOwnProperty("ethereum") && window.ethereum.hasOwnProperty("isMetaMask")) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const tx = signer.sendTransaction({
-            to: '0x5237f30BB101F36deD9fc77a1753878958Cfdf9a',
-            value: ethers.utils.parseEther(amount)
-        })
-    } else {
-        return alert('Install MetaMask to use this cool feature. https://metamask.io')
-    }
-}
-
-$(document).on('click', '#tinytip', function (e) {
-    tip("0.001");
-    e.preventDefault();
-});
-
-$(document).on('click', '#smalltip', function (e) {
-    tip("0.01");
-    e.preventDefault();
-});
-
-$(document).on('click', '#bigtip', function (e) {
-    tip("0.1");
-    e.preventDefault();
-});
-
-$(document).on('click', '#hugetip', function (e) {
-    tip("1");
-    e.preventDefault();
-});

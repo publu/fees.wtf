@@ -27,19 +27,12 @@
             </g>
         </defs>
     </svg>
-    <p>You've spent <span id="gasFeeTotal">&#x1F914</span> on gas. Right now, that's <span id="tokenusd">&#x1F914</span>.</p>
-    <p>You used <span id="gasUsedTotal">&#x1F914</span> gas to send <span id="nOut">&#x1F914</span> transactions, with an average price of <span id="gasPricePerTx">&#x1F914</span> gwei.</p>
-    <p><span id="nOutFail">&#x1F914</span> of them failed, costing you <span id="gasFeeTotalFail">&#x1F914</span>.</p>
-    
-    <div id="tipsy">
-        <div class="toggle">
-            <svg class="nightIcon" viewBox="0 0 100 100"><use xlink:href="#nightIcon"></use></svg>
-            <svg class="dayIcon" viewBox="0 0 35 35"><use xlink:href="#dayIcon"></use></svg>
-        </div>
-        Tip me: <span class='tip' id='tinytip'>0.001</span> | <span class='tip' id='smalltip'>0.010</span> | <span class='tip' id='bigtip'>0.100</span> | <span class='tip' id='hugetip'>1.000</span>
-    </div>
+    <p>This contract has spent <span id="gasFeeTotal">&#x1F914</span> on gas. Right now, that's <span id="tokenusd">&#x1F914</span>.</p>
+    <p>It's used <span id="gasUsedTotal">&#x1F914</span> gas to send <span id="nOut">&#x1F914</span> transactions, with an average price of <span id="gasPricePerTx">&#x1F914</span> gwei.</p>
+    <p><span id="nOutFail">&#x1F914</span> of them failed, costing users <span id="gasFeeTotalFail">&#x1F914</span>.</p>
+
     <footer>
-        <p id='attrib'>Powered by <strong><a href='https://github.com/Sigri44' target="_blank">Sigri</a></strong> and <strong><a href='https://www.coingecko.com/en/api' target="_blank">CoinGecko</a></strong> APIs</p>
+        <p id='attrib'>Powered by <a href='https://github.com/Sigri44' target="_blank">Etherscan</a></strong> and <a href='https://www.coingecko.com/en/api' target="_blank">CoinGecko</a></strong> APIs</p>
     </footer>
 </body>
 <script>
@@ -50,6 +43,7 @@
 
         let params = getUrlVars();
         let address = params.address || params.a || null;
+        let chainId = params.chain || params.c || null;
         if (address == null) {
             if(window.hasOwnProperty("ethereum") && window.ethereum.hasOwnProperty("isMetaMask")) {
                 let addresses = await ethereum.request({ method: 'eth_requestAccounts' });
@@ -61,7 +55,7 @@
             }
         }
 
-        main(address)
+        main(address, chainId)
     });
     
     $(document).ready(function(){
