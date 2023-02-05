@@ -62,39 +62,74 @@ async function getTxs(address, chainId) {
         //tokenusd = tokenusd[coingeckoSymbol].usd;
     console.log(chainConfig[chainId].symbol.toUpperCase()+'USD: $' + tokenusd);
     
-    let key = chainConfig[chainId].key
-    let u = chainConfig[chainId].explorer_uri+`/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc`
-    if (chainConfig[chainId].key) { u += `&apikey=${key}` }
-    let response = await fetch(u)
+    const chunkSize_ = 10000000;
 
-    if (response.ok) { // if HTTP-status is 200-299
-        var json = await response.json();
-    } else {
-        console.error("HTTP-Error: " + response.status);
-    }
+    async function getTxsBlock(address, chainId, startBlock = 0, endBlock = 99999999) {
+        let key = chainConfig[chainId].key;
+        let u = chainConfig[chainId].explorer_uri + `/api?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=${endBlock}&sort=asc`;
+        if (chainConfig[chainId].key) {
+            u += `&apikey=${key}`;
+        }
+        let response = await fetch(u);
 
-    let txs = json['result']
-    let n = txs.length
-    let from, txs2
-
-    while (n===10000) {
-        from = txs[txs.length - 1].blockNumber
-        u = chainConfig[chainId].explorer_uri+`/api?module=account&action=txlist&address=${address}&startblock=${from}&endblock=99999999&sort=asc&apikey=${key}`
-        response = await fetch(u)
-
-        if (response.ok) { // if HTTP-status is 200-299
-            json = await response.json();
+        if (response.ok) {
+            var json = await response.json();
         } else {
-            console.log('Â¯\_(ãƒ„)_/Â¯ : ' + response.status);
-            break
+            console.error("HTTP-Error: " + response.status);
         }
 
-        txs2 = json['result']
-        n = txs2.length
-        txs.push.apply(txs, txs2)
+        return json['result'];
+    }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async function fetchAllTxs(address, chainId, chunkSize) {
+      let key = chainConfig[chainId].key;
+      let explorerUri = chainConfig[chainId].explorer_uri;
+      let from = 0;
+      let txs = [];
+      let start = false;
+      let n = 0;
+      while (true) {
+        let url = explorerUri + `/api?module=account&action=txlist&address=${address}&startblock=${from}&endblock=${from + chunkSize}&sort=asc`;
+        if (key) {
+          url += `&apikey=${key}`;
+        }
+        let response = await fetch(url);
+        await sleep(1000)
+        if (response.ok) {
+          let json = await response.json();
+
+          if(json.message != "Query Timeout occured. Please select a smaller result dataset") {
+              let txs2 = json["result"];
+              n = txs2.length;
+              if (n === 0 && start && chunkSize_==chunkSize) {
+                break;
+              }
+
+              if (n === 0 && start && chunkSize_!==chunkSize) {
+                chunkSize = chunkSize*10;
+              }
+
+              if (n !== 0){
+                start=true;
+              }
+              from += chunkSize;
+              console.log("got " + n + "transactions")
+              txs.push.apply(txs, txs2);
+          } else{
+            console.log("shorten chunkSize and retry")
+            chunkSize = chunkSize/10;
+          }
+        } else {
+          console.error("HTTP-Error: " + response.status);
+          break;
+        }
+      }
+      return txs;
     }
 
-    let txsOut = txs;//$.grep(txs, function(v) {
+    let txsOut = await fetchAllTxs(address, chainId, chunkSize_);//$.grep(txs, function(v) {
         //return v.from === address.toLowerCase();
     //});
 
