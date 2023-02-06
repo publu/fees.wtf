@@ -28,6 +28,8 @@ function comma(x) {
     return parts.join(".");
 }
 
+let totalTxs;
+
 async function getTxs(address, chainId) {
     const chainConfig = []
 
@@ -84,14 +86,28 @@ async function getTxs(address, chainId) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
     async function fetchAllTxs(address, chainId, chunkSize) {
-      let key = chainConfig[chainId].key;
       let explorerUri = chainConfig[chainId].explorer_uri;
+      let key = chainConfig[chainId].key;
+
+      let latestBlock = explorerUri + `/api?module=proxy&action=eth_blockNumber`
+      if (chainConfig[chainId].key) {
+            latestBlock += `&apikey=${key}`;
+        }
+      latestBlock = parseInt((await (await fetch(latestBlock)).json()).result, 16)
+      console.log(latestBlock)
       let from = 0;
       let txs = [];
       let start = false;
       let n = 0;
       while (true) {
-        let url = explorerUri + `/api?module=account&action=txlist&address=${address}&startblock=${from}&endblock=${from + chunkSize}&sort=asc`;
+        let endBlock = from + chunkSize;
+        if(from>latestBlock){
+            break;
+        }
+        if(endBlock>=latestBlock){
+            endBlock=latestBlock;
+        }
+        let url = explorerUri + `/api?module=account&action=txlist&address=${address}&startblock=${from}&endblock=${endBlock}&sort=asc`;
         if (key) {
           url += `&apikey=${key}`;
         }
@@ -99,24 +115,18 @@ async function getTxs(address, chainId) {
         await sleep(1000)
         if (response.ok) {
           let json = await response.json();
-
-          if(json.message != "Query Timeout occured. Please select a smaller result dataset") {
+          if(json.message != "Query Timeout occured. Please select a smaller result dataset" && json.result.length != 10000) {
               let txs2 = json["result"];
               n = txs2.length;
-              if (n === 0 && start && chunkSize_==chunkSize) {
-                break;
-              }
 
-              if (n === 0 && start && chunkSize_!==chunkSize) {
+              if (n < 10 && start && chunkSize_!==chunkSize) {
                 chunkSize = chunkSize*10;
               }
 
-              if (n !== 0){
-                start=true;
-              }
               from += chunkSize;
               console.log("got " + n + "transactions")
               txs.push.apply(txs, txs2);
+              totalTxs=txs.length
           } else{
             console.log("shorten chunkSize and retry")
             chunkSize = chunkSize/10;
@@ -133,9 +143,9 @@ async function getTxs(address, chainId) {
         //return v.from === address.toLowerCase();
     //});
 
-    txsOut = txsOut.map(({ confirmations, ...item }) => item);
-    txsOut = new Set(txsOut.map(JSON.stringify));
-    txsOut = Array.from(txsOut).map(JSON.parse);
+    //txsOut = txsOut.map(({ confirmations, ...item }) => item);
+    //txsOut = new Set(txsOut.map(JSON.stringify));
+    //txsOut = Array.from(txsOut).map(JSON.parse);
     // remove duplicates
     //localStorage.setItem('txsOut', JSON.stringify(txsOut));
     console.log('All outgoing txs:', txsOut)
