@@ -124,9 +124,9 @@ async function getTxs(address, chainId) {
               }
 
               from += chunkSize;
-              console.log("got " + n + "transactions")
               txs.push.apply(txs, txs2);
               totalTxs=txs.length
+              console.log("got " + n + " transactions, total (" + totalTxs +")")
           } else{
             console.log("shorten chunkSize and retry")
             chunkSize = chunkSize/10;
