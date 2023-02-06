@@ -40,7 +40,10 @@ async function getTxs(address, chainId) {
     chainConfig['0xfa'] = {id: '0xfa', shortname: 'ftm', name:'Fantom', symbol: 'ftm', coingecko_name: 'fantom', token: 'ƒ', color: '#00dbff', explorer_uri: 'https://api.ftmscan.com', key: 'B5UU3GDR3VJYVXFYT6RPK5RA6I8J5CV6B3'}
         // {id: '0xa86a', shortname: 'avax', name:'Avalanche', symbol: 'avax', coingecko_name: 'avalanche-2', token: 'Ã', color: '#ec1616', explorer_uri: 'https://cchain.explorer.avax.network/', key: ''},
 
-    // Detect chainId
+    let txsOut = localStorage.getItem(`${address}-${chainId}`);
+
+    if(txsOut) {
+// Detect chainId
     //const chainId = await ethereum.request({ method: 'eth_chainId' });
     if (!chainId in chainConfig) {
         let authorizedNetworks = "";
@@ -138,10 +141,10 @@ async function getTxs(address, chainId) {
       }
       return txs;
     }
+    txsOut = await fetchAllTxs(address, chainId, chunkSize_);//$.grep(txs, function(v) {
+    localStorage.setItem(`${address}-${chainId}`, JSON.stringify(txsOut));
 
-    let txsOut = await fetchAllTxs(address, chainId, chunkSize_);//$.grep(txs, function(v) {
-        //return v.from === address.toLowerCase();
-    //});
+    }
 
     //txsOut = txsOut.map(({ confirmations, ...item }) => item);
     //txsOut = new Set(txsOut.map(JSON.stringify));
@@ -149,6 +152,7 @@ async function getTxs(address, chainId) {
     // remove duplicates
     //localStorage.setItem('txsOut', JSON.stringify(txsOut));
     console.log('All outgoing txs:', txsOut)
+    txsOut = JSON.parse(txsOut)
     
     var nOut = txsOut.length;
     $('#nOut').text(comma(nOut));
