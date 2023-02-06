@@ -42,8 +42,10 @@ async function getTxs(address, chainId) {
 
     let txsOut = localStorage.getItem(`${address}-${chainId}`);
 
-    if(txsOut) {
+    console.log(txsOut)
+    if(!txsOut || !txsOut.length) {
 // Detect chainId
+    console.log("inside")
     //const chainId = await ethereum.request({ method: 'eth_chainId' });
     if (!chainId in chainConfig) {
         let authorizedNetworks = "";
@@ -142,8 +144,16 @@ async function getTxs(address, chainId) {
       return txs;
     }
     txsOut = await fetchAllTxs(address, chainId, chunkSize_);//$.grep(txs, function(v) {
-    localStorage.setItem(`${address}-${chainId}`, JSON.stringify(txsOut));
 
+    try {
+        localStorage.setItem(`${address}-${chainId}`, JSON.stringify(txsOut));
+    } catch (e)
+    {
+        console.log("failed to set item. continuin!");
+    }
+
+    } else{
+        txsOut = JSON.parse(txsOut)
     }
 
     //txsOut = txsOut.map(({ confirmations, ...item }) => item);
@@ -152,8 +162,7 @@ async function getTxs(address, chainId) {
     // remove duplicates
     //localStorage.setItem('txsOut', JSON.stringify(txsOut));
     console.log('All outgoing txs:', txsOut)
-    txsOut = JSON.parse(txsOut)
-    
+
     var nOut = txsOut.length;
     $('#nOut').text(comma(nOut));
     var txsOutFail = $.grep(txsOut, function(v) {
